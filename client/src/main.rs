@@ -1,5 +1,7 @@
 // use tokio::net::TcpStream;
 
+mod read_message;
+mod write_message;
 mod ui;
 
 #[tokio::main]
@@ -14,4 +16,14 @@ async fn main() {
     ui::header::draw();
     ui::body::draw();
     ui::footer::draw();
+
+    // let read_task = tokio::spawn(async move {
+    //     read_message::read_message(reader).await;
+    // });
+
+    // let write_task = tokio::spawn(async move {
+    //     write_message::write_message(writer).await;
+    // });
+
+    // let _ = tokio::join!(read_task, write_task);
 }
