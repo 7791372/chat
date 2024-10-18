@@ -18,7 +18,7 @@ async fn main() {
     ui::header::draw();
     ui::footer::draw();
 
-    let read_task = tokio::spawn(async move {
+    let _read_task = tokio::spawn(async move {
         read_message::read_message(reader).await;
     });
 
@@ -26,5 +26,5 @@ async fn main() {
         input_handler::handle_input(writer).await;
     });
 
-    let _ = tokio::join!(read_task, write_task);
+    let _ = tokio::join!(write_task);
 }
