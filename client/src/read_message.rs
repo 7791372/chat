@@ -12,6 +12,6 @@ pub async fn read_message(reader: OwnedReadHalf) {
         if n == 0 { break };
 
         let msg = String::from_utf8_lossy(&buffer[..n]);
-        print!("{}", msg)
+        print!("\r{}", msg)
     }
 }
