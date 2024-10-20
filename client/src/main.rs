@@ -15,7 +15,6 @@ async fn main() {
     terminal::enable_raw_mode().unwrap();
     print!("\x1B[2J\x1B[3J\x1B[H");
 
-    ui::header::draw();
     ui::footer::draw();
 
     let _read_task = tokio::spawn(async move {
