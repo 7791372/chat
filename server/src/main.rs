@@ -17,21 +17,25 @@ async fn main() {
             let mut buffer = vec![0; 512];
             while let Ok(n) = reader.read(&mut buffer).await {
                 if n == 0 { break; }
-
+        
                 let msg = String::from_utf8_lossy(&buffer[..n]).trim_end().to_string();
-                if tx.send(msg).is_err() {
+                if msg.is_empty() {
+                    continue;
+                }
+        
+                if tx.send(msg.clone()).is_err() {
+                    eprintln!("Failed to send message: {:?}", msg);
                     break;
+                } else {
+                    println!("Message sent: {:?}", msg);
                 }
             }
         });
-
+        
         tokio::spawn(async move {
             while let Ok(msg) = rx.recv().await {
-                if writer.write_all(msg.as_bytes()).await.is_err() {
-                    break;
-                }
-                if writer.write_all(b"\n").await.is_err() {
-                    break;
+                if let Err(e) = writer.write_all(msg.as_bytes()).await {
+                    eprintln!("Failed to write message: {}", e); 
                 }
             }
         });
