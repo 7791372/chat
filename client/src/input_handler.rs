@@ -3,12 +3,14 @@
 use tokio::net::tcp::OwnedWriteHalf;
 use crossterm::event::{self, KeyCode, KeyEvent};
 use std::io::{self, Write};
+use crossterm::terminal::{self, size};
 
-use crate::write_message::write_message;
+use crate::write_message::write_message; 
 
-pub async fn handle_input(writer: OwnedWriteHalf) {
+pub async fn input_handler(writer: OwnedWriteHalf) {
     let mut input = String::new();
     let mut writer = writer;
+    let (_width, height) = size().unwrap();
 
     loop {
         if !event::poll(std::time::Duration::from_millis(100)).unwrap() {
@@ -18,26 +20,23 @@ pub async fn handle_input(writer: OwnedWriteHalf) {
         if let event::Event::Key(KeyEvent { code, .. }) = event::read().unwrap() {
             match code {
                 KeyCode::Enter => {
-                    // TODO: this single line somehow prevents double printing pls fix later
-                    print!("\r");
                     write_message(&mut writer, input.clone()).await;
                     input.clear();
                 }
                 KeyCode::Esc => {
+                    terminal::disable_raw_mode().unwrap();
                     break;
                 }
                 KeyCode::Backspace => {
                     input.pop();
-                    print!("\r{}", input);
-                    io::stdout().flush().unwrap();
                 }
                 KeyCode::Char(c) => {
                     input.push(c);
-                    print!("\r{}", input);
-                    io::stdout().flush().unwrap();
                 }
                 _ => {}
             }
         }
+        print!("\x1B[{}H\x1B[2K{}", height, input);
+        io::stdout().flush().unwrap();
     }
 }
