@@ -16,7 +16,7 @@ pub async fn read_message(reader: OwnedReadHalf) {
 
         let msg = String::from_utf8_lossy(&buffer[..n]).to_string();
         if let Some((name, content)) = parse_message(&msg) {
-            print!("\r\x1B[2K{}: {}", name, content);
+            print!("\x1B[2K\r{}: {}", name, content);
             io::stdout().flush().unwrap();
         }
     }
