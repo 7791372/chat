@@ -22,9 +22,9 @@ async fn main() {
         read_message::read_message(reader).await;
     });
 
-    let write_task = tokio::spawn(async move {
-        input_handler::handle_input(writer).await;
+    let input_handler_task = tokio::spawn(async move {
+        input_handler::input_handler(writer).await;
     });
 
-    let _ = tokio::join!(write_task);
+    let _ = tokio::join!(input_handler_task);
 }
