@@ -3,13 +3,14 @@
 use tokio::net::tcp::OwnedWriteHalf;
 use crossterm::event::{self, KeyCode, KeyEvent};
 use std::io::{self, Write};
-use crossterm::terminal::{self};
+use crossterm::terminal::{self, size};
 
 use crate::write_message::write_message; 
 
 pub async fn input_handler(writer: OwnedWriteHalf) {
     let mut input = String::new();
     let mut writer = writer;
+    let (width, _height) = size().unwrap();
 
     loop {
         if !event::poll(std::time::Duration::from_millis(100)).unwrap() {
@@ -35,7 +36,14 @@ pub async fn input_handler(writer: OwnedWriteHalf) {
                 _ => {}
             }
         }
-        print!("\x1B[2K\r{}", input);
+
+        let visible_input = if input.len() > width as usize {
+            input[input.len() - width as usize..].to_string()
+        } else {
+            input.to_string()
+        };
+
+        print!("\x1B[2K\r{}", visible_input);
         io::stdout().flush().unwrap();
     }
 }
