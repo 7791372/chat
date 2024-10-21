@@ -2,17 +2,19 @@
 
 use tokio::net::tcp::OwnedWriteHalf;
 use crossterm::event::{self, KeyCode, KeyEvent};
-use std::io::{self, Write};
-use crossterm::terminal::{self, size};
+use tokio::sync::Mutex;
+use std::sync::Arc;
+use crossterm::terminal::{self};
 
+use crate::util::update_input_field;
 use crate::write_message::write_message; 
 
-pub async fn input_handler(writer: OwnedWriteHalf) {
-    let mut input = String::new();
+pub async fn input_handler(writer: OwnedWriteHalf, shared_variable: Arc<Mutex<String>>) {
     let mut writer = writer;
-    let (width, _height) = size().unwrap();
 
     loop {
+        let mut input_lock = shared_variable.lock().await;
+
         if !event::poll(std::time::Duration::from_millis(100)).unwrap() {
             continue;
         }
@@ -20,30 +22,24 @@ pub async fn input_handler(writer: OwnedWriteHalf) {
         if let event::Event::Key(KeyEvent { code, .. }) = event::read().unwrap() {
             match code {
                 KeyCode::Enter => {
-                    write_message(&mut writer, input.clone()).await;
-                    input.clear();
+                    let input = input_lock.clone();
+                    write_message(&mut writer, input).await;
+                    input_lock.clear();
                 }
                 KeyCode::Esc => {
                     terminal::disable_raw_mode().unwrap();
                     break;
                 }
                 KeyCode::Backspace => {
-                    input.pop();
+                    input_lock.pop();
                 }
                 KeyCode::Char(c) => {
-                    input.push(c);
+                    input_lock.push(c);
                 }
                 _ => {}
             }
         }
 
-        let visible_input = if input.len() > width as usize {
-            input[input.len() - width as usize..].to_string()
-        } else {
-            input.to_string()
-        };
-
-        print!("\x1B[2K\r{}", visible_input);
-        io::stdout().flush().unwrap();
+        update_input_field(input_lock.to_string());
     }
 }
